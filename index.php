@@ -3,7 +3,7 @@
         <title>Ahmad</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css">
 </head>
-<body style="background-color: #13C1C1">
+<body style="background-color: #cc66ff">
         <div class="ui container">
                 <div class="ui segment" style="max-width: 800px; margin: 0 auto;">
 

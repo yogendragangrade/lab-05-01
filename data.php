@@ -1,20 +1,34 @@
 <?php header('Content-Type: application/json');
 
 
-$servername = 'inventory-db-instance-1.cvvq9b4jiajl.us-east-1.rds.amazonaws.com';
+$write_servername = 'inventory-db-instance-1.cvvq9b4jiajl.us-east-1.rds.amazonaws.com';
+$read_servername = 'inventory-db-instance-2.cvvq9b4jiajl.us-east-1.rds.amazonaws.com';
 $username = 'master';
 $password = 'lab-password';
 $database = 'inventory';
 $table = 'products';
 
-// Create connection
-$conn = mysqli_connect($servername, $username, $password, $database);
+// Create read connection
+$read_conn = mysqli_connect($read_servername, $username, $password, $database);
 
 // Check connection
-if (!$conn) {
+if (!$read_conn) {
     die(json_encode([
-    	'error' => true,
-    	'message' => 'Database connection failed, ' . mysqli_connect_error()
+        'error' => true,
+        'message' => 'Database read connection failed | ' . mysqli_connect_error(),
+        'conn' => $read_conn_arr
+    ]));
+}
+
+// Create write connection
+$write_conn = mysqli_connect($write_servername, $username, $password, $database);
+
+// Check connection
+if (!$write_conn) {
+    die(json_encode([
+        'error' => true,
+        'message' => 'Database write connection failed | ' . mysqli_connect_error(),
+        'conn' => $write_conn_arr
     ]));
 }
 
@@ -23,7 +37,7 @@ if (!$conn) {
 if ($_GET['operation'] === 'get') {
 	$sql = 'SELECT * from ' . $table;
 
-	$result = $conn->query($sql);
+	$result = $read_conn->query($sql);
 
 	$products = [];
 
@@ -48,7 +62,7 @@ if ($_GET['operation'] === 'get') {
 
 	$sql = 'INSERT into ' . $table . '(name, quantity, price) values("'. htmlentities($_GET['product_name']) . '", "' . htmlentities($_GET['product_quantity']) . '", "' . htmlentities($_GET['product_price']) . '")';
 
-	if ($conn->query($sql) === true) {
+	if ($write_conn->query($sql) === true) {
 		die(json_encode([
 			'error' => false,
 			'message' => 'Data inserted successfully'
@@ -72,7 +86,7 @@ if ($_GET['operation'] === 'get') {
 
 	$sql = 'UPDATE ' . $table . ' SET name="'. htmlentities($_GET['product_name']) . '", quantity="' . htmlentities($_GET['product_quantity']) . '", price="' . htmlentities($_GET['product_price']) . '" WHERE id = ' . htmlentities($_GET['product_id']);
 
-	if ($conn->query($sql) === true) {
+	if ($write_conn->query($sql) === true) {
 		die(json_encode([
 			'error' => false,
 			'message' => 'Data updated successfully'
@@ -80,7 +94,7 @@ if ($_GET['operation'] === 'get') {
 	} else {
 		die(json_encode([
 			'error' => true,
-			'message' => mysqli_error($conn)
+			'message' => mysqli_error($write_conn)
 		]));
 	}
 
@@ -96,7 +110,7 @@ if ($_GET['operation'] === 'get') {
 
 	$sql = 'DELETE FROM ' . $table . ' WHERE id=' . htmlentities($_GET['product_id']);
 
-	if ($conn->query($sql) === true) {
+	if ($write_conn->query($sql) === true) {
 		die(json_encode([
 			'error' => false,
 			'message' => 'Data deleted successfully'
@@ -104,7 +118,7 @@ if ($_GET['operation'] === 'get') {
 	} else {
 		die(json_encode([
 			'error' => true,
-			'message' => mysqli_error($conn)
+			'message' => mysqli_error($write_conn)
 		]));
 	}
 	
@@ -116,4 +130,5 @@ if ($_GET['operation'] === 'get') {
 }
 
 // close connection
-mysqli_close($conn);
+mysqli_close($read_conn);
+mysqli_close($write_conn);
